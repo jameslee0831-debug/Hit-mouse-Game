@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>耗呆怡打地鼠</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #fdf2f2;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* 地鼠洞樣式 */
+        .hole {
+            position: relative;
+            background: #4b3621;
+            border-radius: 50% / 30%;
+            box-shadow: inset 0 10px 0 rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* 地鼠動畫 */
+        .mole {
+            position: absolute;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: bottom 0.2s ease-out;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mole.up {
+            bottom: 10%;
+        }
+
+        /* 木槌動畫 */
+        #mallet {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            pointer-events: none;
+            z-index: 100;
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.1s, top 0.1s;
+            transform-origin: bottom right;
+        }
+
+        .hit-animation {
+            transform: rotate(-45deg) scale(1.2) !important;
+        }
+
+        /* 女孩角色漂浮動畫 */
+        .girl-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* 得分彈跳動畫 */
+        .score-pop {
+            animation: pop 0.3s ease;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen pt-8">
+
+    <!-- 頂部資訊欄 -->
+    <div class="z-20 w-full max-w-md px-6 flex justify-between items-center mb-4">
+        <div class="bg-white px-4 py-2 rounded-2xl shadow-lg border-2 border-pink-200">
+            <span class="text-gray-500 font-bold text-sm">得分:</span>
+            <span id="score" class="text-3xl font-black text-pink-600 ml-2">0</span>
+        </div>
+        <button id="startBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95">
+            開始遊戲
+        </button>
+    </div>
+
+    <!-- 角色區 -->
+    <div class="relative w-full max-w-md flex flex-col items-center mb-4">
+        <h1 class="text-3xl font-black text-red-600 mb-2">耗呆怡打地鼠</h1>
+        
+        <!-- 初始設計的女孩角色 SVG -->
+        <div class="girl-float relative w-48 h-48">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- 頭髮 -->
+                <path d="M40,100 Q40,40 100,40 Q160,40 160,100 L160,160 Q100,170 40,160 Z" fill="#3d2b1f" />
+                <!-- 臉 -->
+                <circle cx="100" cy="110" r="50" fill="#ffe0bd" />
+                <!-- 眼睛 -->
+                <circle cx="85" cy="105" r="5" fill="#333" />
+                <circle cx="115" cy="105" r="5" fill="#333" />
+                <!-- 嘴巴 -->
+                <path d="M85,125 Q100,140 115,125" stroke="#ff8a80" stroke-width="3" fill="none" />
+                <!-- 腮紅 -->
+                <circle cx="75" cy="115" r="8" fill="#ffb3ba" opacity="0.6" />
+                <circle cx="125" cy="115" r="8" fill="#ffb3ba" opacity="0.6" />
+                <!-- 身體 -->
+                <path d="M60,160 Q100,140 140,160 L140,200 L60,200 Z" fill="#ff4d4d" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- 打地鼠機台 -->
+    <div class="relative grid grid-cols-3 gap-4 p-4 bg-orange-100 rounded-3xl shadow-2xl border-b-8 border-orange-200 max-w-sm w-full mx-4">
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+        <div class="hole h-24 sm:h-28"><div class="mole text-5xl">🐹</div></div>
+    </div>
+
+    <!-- 木槌 SVG -->
+    <div id="mallet">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="20" width="60" height="35" rx="5" fill="#8d6e63" />
+            <rect x="25" y="25" width="50" height="25" rx="3" fill="#a1887f" />
+            <rect x="45" y="55" width="10" height="40" rx="2" fill="#d7ccc8" />
+        </svg>
+    </div>
+
+    <!-- 訊息提示 -->
+    <div id="gameMsg" class="mt-4 text-gray-500 font-bold text-center px-4">
+        點擊「開始遊戲」挑戰 30 秒打地鼠！
+    </div>
+
+    <script>
+        const holes = document.querySelectorAll('.hole');
+        const moles = document.querySelectorAll('.mole');
+        const scoreBoard = document.querySelector('#score');
+        const startBtn = document.querySelector('#startBtn');
+        const mallet = document.querySelector('#mallet');
+        const gameMsg = document.querySelector('#gameMsg');
+
+        let lastHole;
+        let timeUp = false;
+        let score = 0;
+
+        // 初始化木槌位置
+        function resetMallet() {
+            mallet.style.left = (window.innerWidth / 2 - 40) + 'px';
+            mallet.style.top = '250px';
+        }
+        resetMallet();
+
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        function randomHole(holes) {
+            const idx = Math.floor(Math.random() * holes.length);
+            const hole = holes[idx];
+            if (hole === lastHole) return randomHole(holes);
+            lastHole = hole;
+            return hole;
+        }
+
+        function peep() {
+            const time = randomTime(600, 1200);
+            const hole = randomHole(holes);
+            const mole = hole.querySelector('.mole');
+            mole.classList.add('up');
+            
+            setTimeout(() => {
+                mole.classList.remove('up');
+                if (!timeUp) peep();
+            }, time);
+        }
+
+        function startGame() {
+            scoreBoard.textContent = 0;
+            score = 0;
+            timeUp = false;
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-50');
+            gameMsg.textContent = "遊戲開始，抓地鼠囉！";
+            
+            peep();
+            
+            setTimeout(() => {
+                timeUp = true;
+                startBtn.disabled = false;
+                startBtn.classList.remove('opacity-50');
+                gameMsg.textContent = `時間到！最終得分： ${score}`;
+                resetMallet();
+            }, 30000); 
+        }
+
+        function handleBonk(e) {
+            // 獲取點擊或觸控座標
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            if (clientX && clientY) {
+                mallet.style.left = (clientX - 40) + 'px';
+                mallet.style.top = (clientY - 40) + 'px';
+            }
+            
+            mallet.classList.add('hit-animation');
+            setTimeout(() => mallet.classList.remove('hit-animation'), 100);
+
+            // 判斷是否為地鼠並得分
+            if (this.classList.contains('up')) {
+                score++;
+                this.classList.remove('up');
+                scoreBoard.textContent = score;
+                scoreBoard.classList.add('score-pop');
+                setTimeout(() => scoreBoard.classList.remove('score-pop'), 300);
+            }
+        }
+
+        moles.forEach(mole => {
+            mole.addEventListener('mousedown', handleBonk);
+            mole.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleBonk.call(mole, e);
+            });
+        });
+
+        startBtn.addEventListener('click', startGame);
+
+        // 點擊背景也會移動木槌
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.mole')) return;
+            mallet.style.left = (e.pageX - 40) + 'px';
+            mallet.style.top = (e.pageY - 40) + 'px';
+            mallet.classList.add('hit-animation');
+            setTimeout(() => mallet.classList.remove('hit-animation'), 100);
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.mole')) return;
+            const touch = e.touches[0];
+            mallet.style.left = (touch.pageX - 40) + 'px';
+            mallet.style.top = (touch.pageY - 40) + 'px';
+            mallet.classList.add('hit-animation');
+            setTimeout(() => mallet.classList.remove('hit-animation'), 100);
+        });
+
+    </script>
+</body>
+</html>
+
